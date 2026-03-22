@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>マイカレンダー</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+:root {
+--bg: #0f172a;
+--surface: #1e293b;
+--surface2: #273449;
+--accent: #38bdf8;
+--accent2: #818cf8;
+--text: #f1f5f9;
+--subtext: #94a3b8;
+--border: #334155;
+--today: #38bdf8;
+}
+
+- { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+body {
+font-family: ‘Noto Sans JP’, sans-serif;
+background: var(–bg);
+color: var(–text);
+min-height: 100vh;
+}
+
+/* ログイン画面 */
+#loginScreen {
+position: fixed;
+inset: 0;
+background: linear-gradient(160deg, #0f172a, #1e293b);
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+z-index: 100;
+padding: 32px;
+}
+
+#loginScreen h1 {
+font-family: ‘DM Serif Display’, serif;
+font-size: 32px;
+color: var(–accent);
+margin-bottom: 8px;
+}
+
+#loginScreen p {
+color: var(–subtext);
+font-size: 14px;
+margin-bottom: 48px;
+text-align: center;
+}
+
+.google-btn {
+display: flex;
+align-items: center;
+gap: 12px;
+background: white;
+color: #1a1a1a;
+border: none;
+border-radius: 12px;
+padding: 14px 28px;
+font-size: 15px;
+font-weight: 700;
+font-family: ‘Noto Sans JP’, sans-serif;
+cursor: pointer;
+box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.google-btn:active {
+transform: scale(0.96);
+box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+.google-btn img {
+width: 22px;
+height: 22px;
+}
+
+/* メイン画面 */
+#mainScreen { display: none; }
+
+header {
+padding: 16px 20px 8px;
+display: flex;
+align-items: center;
+justify-content: space-between;
+}
+
+.header-left h1 {
+font-family: ‘DM Serif Display’, serif;
+font-size: 22px;
+color: var(–accent);
+}
+
+.user-info {
+display: flex;
+align-items: center;
+gap: 8px;
+}
+
+.user-avatar {
+width: 32px;
+height: 32px;
+border-radius: 50%;
+border: 2px solid var(–accent);
+}
+
+.logout-btn {
+background: none;
+border: 1px solid var(–border);
+color: var(–subtext);
+border-radius: 8px;
+padding: 4px 10px;
+font-size: 11px;
+font-family: ‘Noto Sans JP’, sans-serif;
+cursor: pointer;
+}
+
+.month-nav {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 8px 20px 12px;
+}
+
+.month-nav button {
+width: 36px;
+height: 36px;
+border-radius: 50%;
+border: 1.5px solid var(–border);
+background: var(–surface);
+color: var(–text);
+font-size: 16px;
+cursor: pointer;
+}
+
+.month-label {
+font-family: ‘DM Serif Display’, serif;
+font-size: 20px;
+color: var(–text);
+}
+
+.weekdays {
+display: grid;
+grid-template-columns: repeat(7, 1fr);
+padding: 0 12px;
+margin-bottom: 6px;
+}
+
+.weekday {
+text-align: center;
+font-size: 11px;
+font-weight: 700;
+color: var(–subtext);
+padding: 4px 0;
+}
+
+.weekday:first-child { color: #f87171; }
+.weekday:last-child { color: var(–accent); }
+
+.calendar-grid {
+display: grid;
+grid-template-columns: repeat(7, 1fr);
+padding: 0 12px;
+gap: 4px;
+}
+
+.day-cell {
+aspect-ratio: 1;
+border-radius: 10px;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: flex-start;
+padding-top: 6px;
+cursor: pointer;
+transition: background 0.15s;
+min-height: 48px;
+}
+
+.day-cell:active { background: var(–surface2); }
+.day-cell.other-month .day-num { opacity: 0.25; }
+
+.day-cell.today .day-num {
+background: var(–today);
+color: #0f172a;
+border-radius: 50%;
+width: 26px;
+height: 26px;
+display: flex;
+align-items: center;
+justify-content: center;
+font-weight: 700;
+}
+
+.day-num {
+font-size: 13px;
+font-weight: 500;
+line-height: 1;
+}
+
+.day-cell:nth-child(7n+1) .day-num { color: #f87171; }
+.day-cell:nth-child(7n) .day-num { color: var(–accent); }
+.day-cell.today .day-num { color: #0f172a !important; }
+
+.dot-row {
+display: flex;
+gap: 2px;
+margin-top: 4px;
+flex-wrap: wrap;
+justify-content: center;
+max-width: 32px;
+}
+
+.dot {
+width: 5px;
+height: 5px;
+border-radius: 50%;
+background: var(–accent2);
+}
+
+.schedule-section {
+margin: 16px 12px 0;
+background: var(–surface);
+border-radius: 16px;
+overflow: hidden;
+}
+
+.schedule-header {
+padding: 14px 16px 10px;
+display: flex;
+align-items: center;
+justify-content: space-between;
+border-bottom: 1px solid var(–border);
+}
+
+.schedule-date-label {
+font-size: 14px;
+font-weight: 700;
+color: var(–accent);
+}
+
+.add-btn {
+background: var(–accent);
+color: #0f172a;
+border: none;
+border-radius: 20px;
+padding: 6px 14px;
+font-size: 12px;
+font-weight: 700;
+font-family: ‘Noto Sans JP’, sans-serif;
+cursor: pointer;
+}
+
+.schedule-list {
+padding: 8px 0;
+min-height: 60px;
+}
+
+.schedule-item {
+display: flex;
+align-items: flex-start;
+padding: 10px 16px;
+gap: 10px;
+border-bottom: 1px solid var(–border);
+animation: fadeIn 0.2s ease;
+}
+
+.schedule-item:last-child { border-bottom: none; }
+
+@keyframes fadeIn {
+from { opacity: 0; transform: translateX(-8px); }
+to { opacity: 1; transform: translateX(0); }
+}
+
+.item-dot {
+width: 8px;
+height: 8px;
+border-radius: 50%;
+background: var(–accent2);
+margin-top: 5px;
+flex-shrink: 0;
+}
+
+.item-body { flex: 1; }
+
+.item-title {
+font-size: 14px;
+font-weight: 600;
+color: var(–text);
+}
+
+.item-memo {
+font-size: 12px;
+color: var(–subtext);
+margin-top: 2px;
+}
+
+.item-delete {
+background: none;
+border: none;
+color: var(–subtext);
+font-size: 16px;
+cursor: pointer;
+padding: 0 4px;
+}
+
+.empty-msg {
+text-align: center;
+color: var(–subtext);
+font-size: 13px;
+padding: 20px;
+}
+
+/* モーダル */
+.modal-overlay {
+position: fixed;
+inset: 0;
+background: rgba(0,0,0,0.6);
+z-index: 50;
+display: none;
+align-items: flex-end;
+justify-content: center;
+}
+
+.modal-overlay.open { display: flex; }
+
+.modal {
+background: var(–surface);
+border-radius: 20px 20px 0 0;
+padding: 24px 20px 40px;
+width: 100%;
+animation: slideUp 0.25s ease;
+}
+
+@keyframes slideUp {
+from { transform: translateY(100%); }
+to { transform: translateY(0); }
+}
+
+.modal h3 {
+font-size: 16px;
+font-weight: 700;
+margin-bottom: 16px;
+color: var(–accent);
+}
+
+.modal input, .modal textarea {
+width: 100%;
+background: var(–surface2);
+border: 1.5px solid var(–border);
+border-radius: 10px;
+padding: 12px 14px;
+font-size: 14px;
+font-family: ‘Noto Sans JP’, sans-serif;
+color: var(–text);
+outline: none;
+margin-bottom: 12px;
+}
+
+.modal input:focus, .modal textarea:focus { border-color: var(–accent); }
+.modal textarea { resize: none; height: 80px; }
+
+.modal-btns { display: flex; gap: 10px; }
+
+.modal-btns button {
+flex: 1;
+padding: 12px;
+border-radius: 10px;
+border: none;
+font-size: 14px;
+font-weight: 700;
+font-family: ‘Noto Sans JP’, sans-serif;
+cursor: pointer;
+}
+
+.btn-cancel { background: var(–surface2); color: var(–subtext); }
+.btn-save { background: var(–accent); color: #0f172a; }
+
+.loading {
+position: fixed;
+inset: 0;
+background: var(–bg);
+display: flex;
+align-items: center;
+justify-content: center;
+z-index: 200;
+font-size: 14px;
+color: var(–subtext);
+}
+
+.pb { height: 32px; }
+</style>
+
+</head>
+<body>
+
+<div class="loading" id="loading">読み込み中...</div>
+
+<!-- ログイン画面 -->
+
+<div id="loginScreen">
+<h1>📅 My Calendar</h1>
+<p>Googleアカウントでログインして<br>あなただけのカレンダーを使いましょう</p>
+<button class="google-btn" onclick="loginWithGoogle()">
+<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+Googleでログイン
+</button>
+</div>
+
+<!-- メイン画面 -->
+
+<div id="mainScreen">
+<header>
+<div class="header-left">
+<h1>Schedule</h1>
+</div>
+<div class="user-info">
+<img class="user-avatar" id="userAvatar" src="" alt="">
+<button class="logout-btn" onclick="logout()">ログアウト</button>
+</div>
+</header>
+
+<div class="month-nav">
+<button onclick="changeMonth(-1)">‹</button>
+<div class="month-label" id="monthLabel"></div>
+<button onclick="changeMonth(1)">›</button>
+</div>
+
+<div class="weekdays">
+<div class="weekday">日</div>
+<div class="weekday">月</div>
+<div class="weekday">火</div>
+<div class="weekday">水</div>
+<div class="weekday">木</div>
+<div class="weekday">金</div>
+<div class="weekday">土</div>
+</div>
+
+<div class="calendar-grid" id="calendarGrid"></div>
+
+<div class="schedule-section">
+<div class="schedule-header">
+<div class="schedule-date-label" id="selectedDateLabel">日付を選択してください</div>
+<button class="add-btn" onclick="openModal()" id="addBtn" style="display:none">＋ 追加</button>
+</div>
+<div class="schedule-list" id="scheduleList">
+<div class="empty-msg">日付をタップしてください</div>
+</div>
+</div>
+
+<div class="pb"></div>
+</div>
+
+<!-- 追加モーダル -->
+
+<div class="modal-overlay" id="modalOverlay">
+<div class="modal">
+<h3 id="modalTitle">予定を追加</h3>
+<input type="text" id="inputTitle" placeholder="予定のタイトル" maxlength="30">
+<textarea id="inputMemo" placeholder="一言メモ（任意）" maxlength="100"></textarea>
+<div class="modal-btns">
+<button class="btn-cancel" onclick="closeModal()">キャンセル</button>
+<button class="btn-save" onclick="saveSchedule()">保存</button>
+</div>
+</div>
+</div>
+
+<!-- Firebase SDK -->
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteField }
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyD0243wJtElanKq88mgOvp8fT9S0tYAYp8",
+authDomain: "my-calendar-7fa22.firebaseapp.com",
+projectId: "my-calendar-7fa22",
+storageBucket: "my-calendar-7fa22.firebasestorage.app",
+messagingSenderId: "667285431178",
+appId: "1:667285431178:web:881ef6be2709df3c509e73",
+measurementId: "G-6DE597LDS6"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let currentUser = null;
+let schedules = {};
+let currentYear, currentMonth, selectedDateStr = null;
+const today = new Date();
+
+// ログイン状態監視
+onAuthStateChanged(auth, async (user) => {
+document.getElementById('loading').style.display = 'none';
+if (user) {
+currentUser = user;
+document.getElementById('loginScreen').style.display = 'none';
+document.getElementById('mainScreen').style.display = 'block';
+document.getElementById('userAvatar').src = user.photoURL || '';
+await loadSchedules();
+initCalendar();
+} else {
+currentUser = null;
+document.getElementById('loginScreen').style.display = 'flex';
+document.getElementById('mainScreen').style.display = 'none';
+}
+});
+
+// Googleログイン
+window.loginWithGoogle = async () => {
+const provider = new GoogleAuthProvider();
+try {
+await signInWithPopup(auth, provider);
+} catch (e) {
+alert('ログインに失敗しました: ' + e.message);
+}
+};
+
+// ログアウト
+window.logout = async () => {
+if (confirm('ログアウトしますか？')) {
+await signOut(auth);
+}
+};
+
+// Firestoreからデータ読み込み
+async function loadSchedules() {
+const ref = doc(db, 'schedules', currentUser.uid);
+const snap = await getDoc(ref);
+schedules = snap.exists() ? snap.data() : {};
+}
+
+// Firestoreへ保存
+async function saveToFirestore() {
+const ref = doc(db, 'schedules', currentUser.uid);
+await setDoc(ref, schedules);
+}
+
+function initCalendar() {
+currentYear = today.getFullYear();
+currentMonth = today.getMonth();
+renderCalendar();
+const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+selectDate(todayStr);
+setTimeout(() => window.openModal(), 400);
+}
+
+window.changeMonth = (delta) => {
+currentMonth += delta;
+if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+renderCalendar();
+};
+
+function renderCalendar() {
+document.getElementById('monthLabel').textContent =
+`${currentYear}年 ${currentMonth + 1}月`;
+
+const grid = document.getElementById('calendarGrid');
+grid.innerHTML = '';
+
+const first = new Date(currentYear, currentMonth, 1).getDay();
+const days = new Date(currentYear, currentMonth + 1, 0).getDate();
+const prevDays = new Date(currentYear, currentMonth, 0).getDate();
+
+for (let i = 0; i < first; i++) {
+addCell(grid, prevDays - first + 1 + i, true, false, null);
+}
+for (let d = 1; d <= days; d++) {
+const isToday = (currentYear === today.getFullYear() &&
+currentMonth === today.getMonth() &&
+d === today.getDate());
+const dateStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+addCell(grid, d, false, isToday, dateStr);
+}
+const remaining = 42 - first - days;
+for (let d = 1; d <= remaining; d++) {
+addCell(grid, d, true, false, null);
+}
+}
+
+function addCell(grid, num, otherMonth, isToday, dateStr) {
+const cell = document.createElement('div');
+cell.className = 'day-cell' + (otherMonth ? ' other-month' : '') + (isToday ? ' today' : '');
+
+const numEl = document.createElement('div');
+numEl.className = 'day-num';
+numEl.textContent = num;
+cell.appendChild(numEl);
+
+if (dateStr && schedules[dateStr] && schedules[dateStr].length > 0) {
+const dotRow = document.createElement('div');
+dotRow.className = 'dot-row';
+const count = Math.min(schedules[dateStr].length, 3);
+for (let i = 0; i < count; i++) {
+const dot = document.createElement('div');
+dot.className = 'dot';
+dotRow.appendChild(dot);
+}
+cell.appendChild(dotRow);
+}
+
+if (dateStr) cell.onclick = () => selectDate(dateStr);
+grid.appendChild(cell);
+}
+
+window.selectDate = (dateStr) => {
+selectedDateStr = dateStr;
+const [y, m, d] = dateStr.split('-');
+document.getElementById('selectedDateLabel').textContent =
+`${y}年${parseInt(m)}月${parseInt(d)}日`;
+document.getElementById('addBtn').style.display = 'block';
+renderScheduleList();
+};
+
+function renderScheduleList() {
+const list = document.getElementById('scheduleList');
+const items = schedules[selectedDateStr] || [];
+list.innerHTML = '';
+
+if (items.length === 0) {
+list.innerHTML = '<div class="empty-msg">予定はありません</div>';
+return;
+}
+
+items.forEach((item, idx) => {
+const el = document.createElement('div');
+el.className = 'schedule-item';
+el.innerHTML = `
+<div class="item-dot"></div>
+<div class="item-body">
+<div class="item-title">${item.title}</div>
+${item.memo ? `<div class="item-memo">${item.memo}</div>` : ''}
+</div>
+<button class="item-delete" onclick="deleteSchedule(${idx})">✕</button>
+`;
+list.appendChild(el);
+});
+}
+
+window.openModal = () => {
+if (!selectedDateStr) return;
+const [y, m, d] = selectedDateStr.split('-');
+document.getElementById('modalTitle').textContent = `${parseInt(m)}月${parseInt(d)}日の予定`;
+document.getElementById('inputTitle').value = '';
+document.getElementById('inputMemo').value = '';
+document.getElementById('modalOverlay').classList.add('open');
+};
+
+window.closeModal = () => {
+document.getElementById('modalOverlay').classList.remove('open');
+};
+
+window.saveSchedule = async () => {
+const title = document.getElementById('inputTitle').value.trim();
+if (!title) { alert('タイトルを入力してください'); return; }
+const memo = document.getElementById('inputMemo').value.trim();
+
+if (!schedules[selectedDateStr]) schedules[selectedDateStr] = [];
+schedules[selectedDateStr].push({ title, memo });
+await saveToFirestore();
+
+closeModal();
+renderScheduleList();
+renderCalendar();
+selectDate(selectedDateStr);
+};
+
+window.deleteSchedule = async (idx) => {
+if (!confirm('この予定を削除しますか？')) return;
+schedules[selectedDateStr].splice(idx, 1);
+if (schedules[selectedDateStr].length === 0) delete schedules[selectedDateStr];
+await saveToFirestore();
+renderScheduleList();
+renderCalendar();
+};
+
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+if (e.target === this) window.closeModal();
+});
+</script>
+
+</body>
+</html>
