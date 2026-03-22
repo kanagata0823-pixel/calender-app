@@ -519,6 +519,11 @@ document.getElementById('mainScreen').style.display = 'none';
 
 // Googleログイン
 window.loginWithGoogle = async () => {
+const ua = navigator.userAgent.toLowerCase();
+if (ua.includes('line')) {
+alert('Safariで開いてください。\n画面下の「...」→「ブラウザで開く」をタップしてください。');
+return;
+}
 const provider = new GoogleAuthProvider();
 try {
 await signInWithPopup(auth, provider);
