@@ -209,6 +209,18 @@ line-height: 1;
 .day-cell:nth-child(7n) .day-num { color: var(–accent); }
 .day-cell.today .day-num { color: #0f172a !important; }
 
+.day-event-title {
+font-size: 9px;
+color: #818cf8;
+margin-top: 3px;
+max-width: 36px;
+overflow: hidden;
+text-overflow: ellipsis;
+white-space: nowrap;
+text-align: center;
+font-weight: 600;
+}
+
 .dot-row {
 display: flex;
 gap: 2px;
@@ -468,7 +480,7 @@ Googleでログイン
 <div class="modal-overlay" id="modalOverlay">
 <div class="modal">
 <h3 id="modalTitle">予定を追加</h3>
-<input type="text" id="inputTitle" placeholder="予定のタイトル" maxlength="30">
+<input type="text" id="inputTitle" placeholder="行先" maxlength="30">
 <textarea id="inputMemo" placeholder="一言メモ（任意）" maxlength="100"></textarea>
 <div class="modal-btns">
 <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
@@ -612,15 +624,19 @@ numEl.textContent = num;
 cell.appendChild(numEl);
 
 if (dateStr && schedules[dateStr] && schedules[dateStr].length > 0) {
-const dotRow = document.createElement('div');
-dotRow.className = 'dot-row';
-const count = Math.min(schedules[dateStr].length, 3);
-for (let i = 0; i < count; i++) {
-const dot = document.createElement('div');
-dot.className = 'dot';
-dotRow.appendChild(dot);
+const titleEl = document.createElement('div');
+titleEl.className = 'day-event-title';
+const firstItem = schedules[dateStr][0];
+const firstTitle = firstItem.title;
+titleEl.textContent = firstTitle.length > 4 ? firstTitle.slice(0, 4) + '…' : firstTitle;
+cell.appendChild(titleEl);
+// メモがある予定が1件でもあれば赤点表示
+const hasMemo = schedules[dateStr].some(item => item.memo && item.memo.trim() !== '');
+if (hasMemo) {
+const redDot = document.createElement('div');
+redDot.style.cssText = 'width:5px;height:5px;border-radius:50%;background:#f87171;margin:2px auto 0;';
+cell.appendChild(redDot);
 }
-cell.appendChild(dotRow);
 }
 
 if (dateStr) cell.onclick = () => selectDate(dateStr);
@@ -692,7 +708,7 @@ document.getElementById('modalOverlay').classList.remove('open');
 
 window.saveSchedule = async () => {
 const title = document.getElementById('inputTitle').value.trim();
-if (!title) { alert('タイトルを入力してください'); return; }
+if (!title) { alert('行先を入力してください'); return; }
 const memo = document.getElementById('inputMemo').value.trim();
 
 if (!schedules[selectedDateStr]) schedules[selectedDateStr] = [];
