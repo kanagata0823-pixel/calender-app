@@ -445,6 +445,11 @@ Googleでログイン
 
 <div class="calendar-grid" id="calendarGrid"></div>
 
+<div id="todaySummary" style="margin:10px 12px 0;background:#1e293b;border-radius:12px;padding:12px 16px;display:none;">
+<div style="font-size:11px;color:#94a3b8;margin-bottom:6px;font-weight:700;">📌 今日の予定</div>
+<div id="todayTitles"></div>
+</div>
+
 <div class="schedule-section">
 <div class="schedule-header">
 <div class="schedule-date-label" id="selectedDateLabel">日付を選択してください</div>
@@ -559,6 +564,7 @@ currentMonth = now.getMonth();
 renderCalendar();
 const todayStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
 selectDate(todayStr);
+renderTodaySummary();
 setTimeout(() => window.openModal(), 400);
 }
 
@@ -621,6 +627,22 @@ if (dateStr) cell.onclick = () => selectDate(dateStr);
 grid.appendChild(cell);
 }
 
+function renderTodaySummary() {
+const now = new Date();
+const todayStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+const items = schedules[todayStr] || [];
+const summary = document.getElementById('todaySummary');
+const titles = document.getElementById('todayTitles');
+if (items.length === 0) {
+summary.style.display = 'none';
+return;
+}
+summary.style.display = 'block';
+titles.innerHTML = items.map(i =>
+'<div style="font-size:13px;color:#f1f5f9;padding:3px 0;border-bottom:1px solid #334155;">・' + i.title + '</div>'
+).join('');
+}
+
 window.selectDate = (dateStr) => {
 selectedDateStr = dateStr;
 const [y, m, d] = dateStr.split('-');
@@ -680,6 +702,7 @@ await saveToFirestore();
 closeModal();
 renderScheduleList();
 renderCalendar();
+renderTodaySummary();
 selectDate(selectedDateStr);
 };
 
@@ -690,6 +713,7 @@ if (schedules[selectedDateStr].length === 0) delete schedules[selectedDateStr];
 await saveToFirestore();
 renderScheduleList();
 renderCalendar();
+renderTodaySummary();
 };
 
 document.getElementById('modalOverlay').addEventListener('click', function(e) {
