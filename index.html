@@ -548,10 +548,11 @@ await setDoc(ref, schedules);
 }
 
 function initCalendar() {
-currentYear = today.getFullYear();
-currentMonth = today.getMonth();
+const now = new Date();
+currentYear = now.getFullYear();
+currentMonth = now.getMonth();
 renderCalendar();
-const todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+const todayStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
 selectDate(todayStr);
 setTimeout(() => window.openModal(), 400);
 }
